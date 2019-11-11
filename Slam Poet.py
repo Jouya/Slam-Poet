@@ -1,6 +1,7 @@
 """
 Jouya Mahmoudi
 11/11/2019
+A program that creates free-style poetry!
 """
 import pyttsx3
 import random
@@ -15,6 +16,7 @@ import inflect
 from nltk.corpus import wordnet
 # feel free to add more!
 RAND_LIST = ["amazing","test","powerful","magic","sad","cold","creative"]
+QUESTION = ["Why", "However,", "Yet", "Therefore", "Thus"]
 
 
 def present(string):
@@ -79,54 +81,89 @@ def poem_generation(magnet,topic):
                 if l.antonyms():
                     antonyms.append(l.antonyms()[0].name())
     topic = topic.capitalize()
-    for i in range(0,random.randint(5,12)):
+    for i in range(0,random.randint(5,15)):
         verse = random.randint(0,6)
+        question = random.randint(0,6)
+        # structure
         # antonyms
         if (verse < 2) and len(antonyms) > 0:
             ant_magnet = metaphor_magnet(antonyms[random.randint(0,len(antonyms)-1)])
             choice = random.randint(0,len(ant_magnet)-1)
             detail = ant_magnet[choice].split(":")
-            if (detail[0][0] in ['a','e','i','o','u']):
-                poem += topic + " " + verb + " not like an " + detail[0] + " " + detail[1] + "\n" 
+            if (question < 2):
+                index = random.randint(0,len(QUESTION)-1)
+                if (detail[0][0] in ['a','e','i','o','u']):
+                    poem += QUESTION[index] + " " + verb + " " + topic + " not like an " + detail[0] + " " + detail[1] + "?\n" 
+                else:
+                    poem += QUESTION[index] + " " + verb + " " + topic + " not like a " + detail[0] + " " + detail[1] + "?\n" 
             else:
-                poem += topic + " " + verb + " not like a " + detail[0] + " " + detail[1] + "\n" 
+                if (detail[0][0] in ['a','e','i','o','u']):
+                    poem += topic + " " + verb + " not like an " + detail[0] + " " + detail[1] + ".\n" 
+                else:
+                    poem += topic + " " + verb + " not like a " + detail[0] + " " + detail[1] + ".\n" 
                                          
         else:
             choice = random.randint(0,len(magnet)-1)
             detail = magnet[choice].split(":")
-            if (detail[0][0] in ['a','e','i','o','u']):
-                poem += topic + " " + verb + " like an " + detail[0] + " " + detail[1] + "\n" 
+            if (question < 2):
+                index = random.randint(0,len(QUESTION)-1)
+                if (detail[0][0] in ['a','e','i','o','u']):
+                    poem += QUESTION[index] + " " + verb + " " + topic + " like an " + detail[0] + " " + detail[1] + "?\n" 
+                else:
+                    poem += QUESTION[index] + " " + verb + " " + topic + " like a " + detail[0] + " " + detail[1] + "?\n" 
             else:
-                poem += topic + " " + verb + " like a " + detail[0] + " " + detail[1] + "\n"    
-            
+                if (detail[0][0] in ['a','e','i','o','u']):
+                    poem += topic + " " + verb + " like an " + detail[0] + " " + detail[1] + "\n" 
+                else:
+                    poem += topic + " " + verb + " like a " + detail[0] + " " + detail[1] + "\n"    
+                
     return poem
-                    
-def main():   
+
+def evaluate(poem):
+    """ Evaluates the poem based on how similar the description words are"""
+    score = 0
+    sentence_list = poem.split("\n")
+    for d1 in sentence_list:
+        d1 = d1.split()
+        if (len(d1) > 2):
+            if (len(wordnet.synsets(d1[-1])) > 1):
+                w1 = wordnet.synsets(d1[-1])[0]
+                w2 = wordnet.synsets(d1[-2])[0]
+                if (w1.wup_similarity(w2)!= None):
+                    score += w1.wup_similarity(w2)
+                else:
+                    # arbitrary default value
+                    score += .1
+    return score
+                          
+def main():
+    poem_list = []
     topic = str(input("What do you want the poem to be about?\n"))
     magnet = metaphor_magnet(topic)
-    poem = poem_generation(magnet,topic)
+    # Generate 5 poems
+    for i in range(0,5):
+        poem = poem_generation(magnet,topic)
+        info = (poem,(evaluate(poem)))
+        poem_list.append(info)
+    high_score = 0
+    chosen_poem = ""
+    # pick the best poem
+    for poem in poem_list:
+        if (poem[1] >= high_score):
+            high_score = poem[1]
+            chosen_poem = poem[0]
+    print("\t\t" + topic.capitalize())
+    read_poem = chosen_poem.split("\n")
     mixer.init()
     mixer.music.load("test1.mp3")
     mixer.music.play()
     mixer.music.set_volume(.2)
-    print(poem)
-    poem = poem.split("\n")
-    for sentence in poem:
+    # read the poem
+    for sentence in read_poem:
+        print(sentence)
         present(sentence)
     mixer.music.fadeout(3000)
 
 if __name__ == "__main__":
     main()
     
-
-
-
-    
-
-
-     
-
-
-
-
-
